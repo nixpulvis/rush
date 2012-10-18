@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+
+class String
+
+  def colorize(color_code)
+    "\e[#{color_code}m#{self}\e[0m"
+  end
+
+  def red; self.colorize(31); end
+  def green; self.colorize(32); end
+  def yellow; self.colorize(33); end
+
+end
+
+class Rush
+  module Commands
+
+    def exit( args )
+      puts "[Exiting Rush, have a nice day.]"
+      Kernel.exit
+    end
+
+    def cd( args )
+      args ||= ENV["HOME"]
+      args.gsub! /~/, ENV["HOME"]
+      Dir.chdir args
+    end
+
+  end
+end
+
+class Rush
+  include Commands
+
+  def initialize
+    trap("INT") { } # don't go exiting on me
+
+    ENV["PATH"] += ":/usr/local/bin"
+
+    prompt
+
+    STDIN.each_line do |line|
+      cmd, args = line.split(" ")
+
+      # keep the REPL alive even if the use just gives us nothing.
+      unless cmd
+        prompt
+        next
+      end
+
+      if commands.include? cmd
+        self.send cmd, args
+      else
+        child_pid = fork do
+          begin
+            exec line
+          rescue SystemCallError
+            puts "[RuSh] ".yellow + "command not found: #{cmd}".red
+          end
+        end
+        Process.wait child_pid
+      end
+
+      prompt
+    end
+  end
+
+  def prompt
+    print "[RuSh] ".yellow + `pwd`.chomp + " => ".green
+  end
+
+  def commands
+    Commands.instance_methods false
+  end
+
+end
+
+Rush.new

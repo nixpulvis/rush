@@ -1,0 +1,3 @@
+# RuSh
+
+Simple Ruby Shell.
