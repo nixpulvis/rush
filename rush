@@ -29,8 +29,9 @@ BUILTINS['cd'] = lambda do | *path |
   end
 end
 
-BUILTINS['exit'] = lambda do | code |
-  code ||= 0
+BUILTINS['exit'] = lambda do | *code |
+  code << 0 if code.empty?
+  code = code.pop
   exit(code.to_i)
 end
 
