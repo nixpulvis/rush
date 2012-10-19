@@ -50,11 +50,6 @@ ENV["PATH"] += ":/usr/local/bin"
 while line = Readline.readline(prompt, true)
   command, *arguments = line.split(" ")
 
-  unless line
-    prompt
-    next
-  end
-
   if BUILTINS[command]
     BUILTINS[command].call(*arguments)
   else
