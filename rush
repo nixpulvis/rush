@@ -39,7 +39,11 @@ BUILTINS['exec'] = lambda do | *command |
   exec *command
 end
 
-trap("INT", 'SIG_IGN') # don't go exiting on me
+# don't go exiting on me.
+trap("INT", 'SIG_IGN')
+
+# add a '/' after completion
+Readline.completion_append_character = "/"
 
 ENV["PATH"] += ":/usr/local/bin"
 
