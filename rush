@@ -14,7 +14,7 @@ class String
 end
 
 def prompt
-  "[RuSh] ".yellow + `pwd`.chomp + " => ".green
+  "[RuSh] ".yellow + `pwd`.chomp.split("/")[-1] + " => ".green
 end
 
 BUILTINS = { }
@@ -38,7 +38,7 @@ BUILTINS['exec'] = lambda do | *command |
   exec *command
 end
 
-trap("INT") { } # don't go exiting on me
+trap("INT", 'SIG_IGN') # don't go exiting on me
 
 ENV["PATH"] += ":/usr/local/bin"
 
