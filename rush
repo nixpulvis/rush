@@ -7,19 +7,26 @@ class String
     "\e[#{color_code}m#{self}\e[0m"
   end
 
+  def black; self.colorize(30); end
   def red; self.colorize(31); end
   def green; self.colorize(32); end
   def yellow; self.colorize(33); end
+  def blue; self.colorize(34); end
+  def magenta; self.colorize(35); end
+  def cyan; self.colorize(36); end
+  def white; self.colorize(37); end
 
 end
+
+RUSH_VERSION = "0.0.1"
 
 def prompt
   current_directory = Dir.pwd.split('/')[-1] || Dir.pwd
-  "[RuSh] ".yellow + current_directory + " => ".green
+  current_directory + " => ".green
 end
 
-def error( text )
-  puts "[RuSh] ".yellow + text.red
+def rush_puts( text )
+  puts "[RuSh] ".magenta + text
 end
 
 BUILTINS = { }
@@ -30,7 +37,7 @@ BUILTINS['cd'] = lambda do | *path |
   begin
     Dir.chdir path
   rescue Exception
-    error "no such directory: #{path}"
+    rush_puts "no such directory: #{path}"
   end
 end
 
@@ -52,8 +59,17 @@ BUILTINS['path'] = lambda do | *command |
     ENV["PATH"] += ":#{path_string}"
     puts "Added " + path_string.to_s.yellow + " to the PATH"
   else
-    error "not valid path: #{path_string}"
+    rush_puts "not valid path: #{path_string}"
   end
+end
+
+BUILTINS['version'] = lambda do | *command |
+  rush_puts RUSH_VERSION
+end
+
+BUILTINS['builtins'] = lambda do | *command |
+  rush_puts "listing all built in functions:"
+  BUILTINS.each_key { |key| puts "  - #{key}" }
 end
 
 unless ARGV.empty?
@@ -91,7 +107,7 @@ while line = Readline.readline(prompt, true)
       begin
         exec line
       rescue SystemCallError
-        error "command not found: #{command}"
+        rush_puts "command not found: #{command}"
       end
     end
     Process.wait child_pid
