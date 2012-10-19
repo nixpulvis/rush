@@ -14,7 +14,9 @@ class String
 end
 
 def prompt
-  "[RuSh] ".yellow + `pwd`.chomp.split("/")[-1] + " => ".green
+  current_directory = Dir.pwd.split('/')[-1] || Dir.pwd
+  # current_directory = `pwd`.chomp.split("/")[-1]
+  "[RuSh] ".yellow + current_directory + " => ".green
 end
 
 BUILTINS = { }
@@ -39,6 +41,26 @@ BUILTINS['exec'] = lambda do | *command |
   exec *command
 end
 
+BUILTINS['path'] = lambda do | *command |
+  valid = true
+  path_string = command.join ":"
+  command.map { |path| valid &&= File.exists? path }
+  if valid
+    ENV["PATH"] += ":#{path_string}"
+    puts "Added " + path_string.to_s.yellow + " to the PATH"
+  else
+    puts "[RuSh] ".yellow + "not valid path: #{path_string}".red
+  end
+end
+
+# allow rush to inform users about itself
+# we do this here BEFORE the REPL starts
+unless ARGV.empty?
+  puts "[RuSh] Ruby Shell - by Nathan Lilienthal"
+  puts "    - something informitive"
+  exit
+end
+
 # don't go exiting on me.
 trap("INT", 'SIG_IGN')
 
@@ -50,6 +72,9 @@ ENV["PATH"] += ":/usr/local/bin"
 
 while line = Readline.readline(prompt, true)
   command, *arguments = line.split(" ")
+
+  # just move on if user gives nothing.
+  next if command.nil?
 
   if BUILTINS[command]
     BUILTINS[command].call(*arguments)
