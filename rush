@@ -18,6 +18,10 @@ def prompt
   "[RuSh] ".yellow + current_directory + " => ".green
 end
 
+def error( text )
+  puts "[RuSh] ".yellow + text.red
+end
+
 BUILTINS = { }
 BUILTINS['cd'] = lambda do | *path |
   path << ENV["HOME"] if path.empty?
@@ -26,14 +30,14 @@ BUILTINS['cd'] = lambda do | *path |
   begin
     Dir.chdir path
   rescue Exception
-    puts "[RuSh] ".yellow + "no such directory: #{path}".red
+    error "no such directory: #{path}"
   end
 end
 
 BUILTINS['exit'] = lambda do | *code |
   code << 0 if code.empty?
   code = code.pop
-  exit(code.to_i)
+  exit code.to_i
 end
 
 BUILTINS['exec'] = lambda do | *command |
@@ -48,7 +52,7 @@ BUILTINS['path'] = lambda do | *command |
     ENV["PATH"] += ":#{path_string}"
     puts "Added " + path_string.to_s.yellow + " to the PATH"
   else
-    puts "[RuSh] ".yellow + "not valid path: #{path_string}".red
+    error "not valid path: #{path_string}"
   end
 end
 
@@ -87,7 +91,7 @@ while line = Readline.readline(prompt, true)
       begin
         exec line
       rescue SystemCallError
-        puts "[RuSh] ".yellow + "command not found: #{command}".red
+        error "command not found: #{command}"
       end
     end
     Process.wait child_pid
