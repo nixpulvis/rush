@@ -15,7 +15,6 @@ end
 
 def prompt
   current_directory = Dir.pwd.split('/')[-1] || Dir.pwd
-  # current_directory = `pwd`.chomp.split("/")[-1]
   "[RuSh] ".yellow + current_directory + " => ".green
 end
 
@@ -53,12 +52,14 @@ BUILTINS['path'] = lambda do | *command |
   end
 end
 
-# allow rush to inform users about itself
-# we do this here BEFORE the REPL starts
 unless ARGV.empty?
-  puts "[RuSh] Ruby Shell - by Nathan Lilienthal"
-  puts "    - something informitive"
-  exit
+  begin
+    File.open(ARGV[0], 'r').each_line do |line|
+      eval line
+    end
+  rescue => err
+    puts "Exception: #{err}"
+  end
 end
 
 # don't go exiting on me.
