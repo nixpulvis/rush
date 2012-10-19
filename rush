@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+require "readline"
 
 class String
 
@@ -12,67 +13,53 @@ class String
 
 end
 
-class Rush
-  module Commands
+def prompt
+  "[RuSh] ".yellow + `pwd`.chomp + " => ".green
+end
 
-    def exit( args )
-      puts "[Exiting Rush, have a nice day.]"
-      Kernel.exit
-    end
-
-    def cd( args )
-      args ||= ENV["HOME"]
-      args.gsub! /~/, ENV["HOME"]
-      Dir.chdir args
-    end
-
+BUILTINS = { }
+BUILTINS['cd'] = lambda do | *path |
+  path << ENV["HOME"] if path.empty?
+  path = path.pop
+  path = path.gsub /~/, ENV["HOME"]
+  begin
+    Dir.chdir path
+  rescue Exception
+    puts "[RuSh] ".yellow + "no such directory: #{path}".red
   end
 end
 
-class Rush
-  include Commands
+BUILTINS['exit'] = lambda do | code |
+  code ||= 0
+  exit(code.to_i)
+end
 
-  def initialize
-    trap("INT") { } # don't go exiting on me
+BUILTINS['exec'] = lambda do | *command |
+  exec *command
+end
 
-    ENV["PATH"] += ":/usr/local/bin"
+trap("INT") { } # don't go exiting on me
 
+ENV["PATH"] += ":/usr/local/bin"
+
+while line = Readline.readline(prompt, true)
+  command, *arguments = line.split(" ")
+
+  unless line
     prompt
+    next
+  end
 
-    STDIN.each_line do |line|
-      cmd, args = line.split(" ")
-
-      # keep the REPL alive even if the use just gives us nothing.
-      unless cmd
-        prompt
-        next
+  if BUILTINS[command]
+    BUILTINS[command].call(*arguments)
+  else
+    child_pid = fork do
+      begin
+        system line
+      rescue SystemCallError
+        puts "[RuSh] ".yellow + "command not found: #{command}".red
       end
-
-      if commands.include? cmd
-        self.send cmd, args
-      else
-        child_pid = fork do
-          begin
-            exec line
-          rescue SystemCallError
-            puts "[RuSh] ".yellow + "command not found: #{cmd}".red
-          end
-        end
-        Process.wait child_pid
-      end
-
-      prompt
     end
+    Process.wait child_pid
   end
-
-  def prompt
-    print "[RuSh] ".yellow + `pwd`.chomp + " => ".green
-  end
-
-  def commands
-    Commands.instance_methods false
-  end
-
 end
-
-Rush.new
