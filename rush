@@ -56,7 +56,7 @@ while line = Readline.readline(prompt, true)
   else
     child_pid = fork do
       begin
-        system line
+        exec line
       rescue SystemCallError
         puts "[RuSh] ".yellow + "command not found: #{command}".red
       end
