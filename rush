@@ -135,21 +135,19 @@ end
 while line = Readline.readline(prompt, true)
   command, *arguments = line.split(" ")
 
+  if ALIASES[command]
+    command, *arguments = ALIASES[command].split(" ")
+  end
+
   # just move on if user gives nothing.
   next if command.nil?
 
   if BUILTINS[command]
     BUILTINS[command].call(*arguments)
   else
-    if ALIASES[command]
-      call_string = ALIASES[command] + " " + arguments.join(' ')
-    else
-      call_string = line
-    end
-
     child_pid = fork do
       begin
-        exec call_string
+        exec "#{command} #{arguments.join(' ')}"
       rescue SystemCallError
         rush_puts "command not found: #{command}"
       end
