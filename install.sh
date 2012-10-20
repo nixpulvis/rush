@@ -1,2 +1,2 @@
 #!/bin/sh
-sudo cp rush /bin/rush
+sudo cp $(dirname $0)/rush /bin/rush

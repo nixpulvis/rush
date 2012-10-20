@@ -95,16 +95,20 @@ BUILTINS['source'] = lambda do | *command |
   source command.pop
 end
 
+# evaluation a script file
 unless ARGV.empty?
   # allow exiting now
-  trap("INT") { puts "stopping #{ARGV}"; exit }
+  trap("INT") { puts "Stopping #{ARGV}"; exit }
+
+  # Don't show the fucking ^C (or anything for that matter)
+  system "stty -echo"
 
   begin
     File.open(ARGV[0], 'r').each_line do |line|
       eval line
     end
-  rescue => err
-    puts "Exception: #{err}"
+  rescue => e
+    puts e.backtrace
   end
 end
 
@@ -117,6 +121,7 @@ source RUSH_PROFILE
 
 Readline.completion_append_character = nil
 Readline.completion_proc = Proc.new do | current_word |
+  current_word.gsub! /~/, ENV["HOME"]
   Dir["#{current_word}*"].map! do |suggestion|
     if File.directory? suggestion
       suggestion += "/"
