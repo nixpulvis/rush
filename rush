@@ -96,6 +96,14 @@ BUILTINS['source'] = lambda do | *command |
   source command.pop
 end
 
+BUILTINS['alias'] = lambda do | *command |
+  name, *value = command
+  unless name && !value.empty?
+    rush_puts "name and value(string) of alias required"
+  end
+  ALIASES[name] = value.join(' ')
+end
+
 # evaluation a script file
 unless ARGV.empty?
   # allow exiting now
@@ -136,7 +144,8 @@ while line = Readline.readline(prompt, true)
   command, *arguments = line.split(" ")
 
   if ALIASES[command]
-    command, *arguments = ALIASES[command].split(" ")
+    command, *new_args = ALIASES[command].split(" ")
+    arguments = new_args + arguments
   end
 
   # just move on if user gives nothing.
