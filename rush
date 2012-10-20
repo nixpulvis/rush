@@ -19,6 +19,21 @@ class String
 end
 
 RUSH_VERSION = "0.0.1"
+RUSH_PROFILE = "#{ENV["HOME"]}/.rush_rc"
+
+def ensure_profile
+  return if File.exists? RUSH_PROFILE
+  File.open(RUSH_PROFILE, "w") do |file|
+    file.puts "# insert ruby code here."
+    file.puts "ENV['PATH'] += ':/usr/local/bin'"
+  end
+end
+
+def source( file )
+  File.open(file, 'r').each_line do |line|
+    eval line
+  end
+end
 
 def prompt
   current_directory = Dir.pwd.split('/')[-1] || Dir.pwd
@@ -72,6 +87,14 @@ BUILTINS['builtins'] = lambda do | *command |
   BUILTINS.each_key { |key| puts key }
 end
 
+BUILTINS['source'] = lambda do | *command |
+  if command.empty?
+    rush_puts "filename argument required"
+    return
+  end
+  source command.pop
+end
+
 unless ARGV.empty?
   # allow exiting now
   trap("INT") { puts "stopping #{ARGV}"; exit }
@@ -88,6 +111,10 @@ end
 # don't go exiting on me.
 trap("INT", 'SIG_IGN')
 
+# evaluate ruby inside of RUSH_PROFILE
+ensure_profile
+source RUSH_PROFILE
+
 Readline.completion_append_character = nil
 Readline.completion_proc = Proc.new do | current_word |
   Dir["#{current_word}*"].map! do |suggestion|
@@ -98,9 +125,6 @@ Readline.completion_proc = Proc.new do | current_word |
     end
   end
 end
-
-# adding to PATH
-ENV["PATH"] += ":/usr/local/bin"
 
 while line = Readline.readline(prompt, true)
   command, *arguments = line.split(" ")
