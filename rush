@@ -18,8 +18,9 @@ class String
 
 end
 
-RUSH_VERSION = "0.0.1"
+RUSH_VERSION = "0.0.2"
 RUSH_PROFILE = "#{ENV["HOME"]}/.rush_rc"
+ALIASES = {}
 
 def ensure_profile
   return if File.exists? RUSH_PROFILE
@@ -140,9 +141,15 @@ while line = Readline.readline(prompt, true)
   if BUILTINS[command]
     BUILTINS[command].call(*arguments)
   else
+    if ALIASES[command]
+      call_string = ALIASES[command] + " " + arguments.join(' ')
+    else
+      call_string = line
+    end
+
     child_pid = fork do
       begin
-        exec line
+        exec call_string
       rescue SystemCallError
         rush_puts "command not found: #{command}"
       end
