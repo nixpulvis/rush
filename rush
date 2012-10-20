@@ -69,7 +69,7 @@ end
 
 BUILTINS['builtins'] = lambda do | *command |
   rush_puts "listing all built in functions:"
-  BUILTINS.each_key { |key| puts "  - #{key}" }
+  BUILTINS.each_key { |key| puts key }
 end
 
 unless ARGV.empty?
@@ -88,8 +88,16 @@ end
 # don't go exiting on me.
 trap("INT", 'SIG_IGN')
 
-# add a '/' after completion
-Readline.completion_append_character = "/"
+Readline.completion_append_character = nil
+Readline.completion_proc = Proc.new do | current_word |
+  Dir["#{current_word}*"].map! do |suggestion|
+    if File.directory? suggestion
+      suggestion += "/"
+    else
+      suggestion
+    end
+  end
+end
 
 # adding to PATH
 ENV["PATH"] += ":/usr/local/bin"
