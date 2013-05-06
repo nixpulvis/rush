@@ -1,4 +1,4 @@
-# RuSh
+# =rush=
 
 Simple Ruby Shell.
 
